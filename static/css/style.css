@@ -1,0 +1,217 @@
+/* 全局 reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* 导航栏样式 */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+}
+
+.brand-text {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nav-greeting {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+}
+
+.nav-link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 主容器 */
+.container {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+/* 卡片样式 */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 36px;
+    margin-bottom: 24px;
+}
+
+.card-login {
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.card-center {
+    text-align: center;
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.card-text {
+    color: #666;
+    margin-bottom: 24px;
+    font-size: 15px;
+}
+
+/* 错误提示 */
+.error-message {
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    color: #cf1322;
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* 表单样式 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+/* 按钮样式 */
+.btn {
+    display: inline-block;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: opacity 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.85;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: #fff;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 12px 24px;
+    font-size: 15px;
+}
+
+.btn-logout {
+    background: #ff4d4f;
+    color: #fff;
+}
+
+/* 用户信息表格 */
+.user-info {
+    margin-bottom: 24px;
+}
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.info-table tr {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-table tr:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    padding: 12px 0;
+    font-size: 14px;
+    color: #888;
+    width: 80px;
+    vertical-align: top;
+}
+
+.info-value {
+    padding: 12px 0;
+    font-size: 14px;
+    color: #333;
+    word-break: break-all;
+}
+
+/* 操作行 */
+.action-row {
+    text-align: center;
+    padding-top: 8px;
+}
