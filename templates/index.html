@@ -10,10 +10,6 @@
                     <td class="info-value">{{ user.username }}</td>
                 </tr>
                 <tr>
-                    <td class="info-label">密码</td>
-                    <td class="info-value">{{ user.password }}</td>
-                </tr>
-                <tr>
                     <td class="info-label">邮箱</td>
                     <td class="info-value">{{ user.email }}</td>
                 </tr>
@@ -25,10 +21,12 @@
                     <td class="info-label">角色</td>
                     <td class="info-value">{{ user.role }}</td>
                 </tr>
+                {% if user.role == "admin" %}
                 <tr>
                     <td class="info-label">余额</td>
                     <td class="info-value">{{ user.balance }}</td>
                 </tr>
+                {% endif %}
             </table>
         </div>
         <div class="action-row">
