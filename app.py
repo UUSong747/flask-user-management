@@ -1,5 +1,6 @@
 """用户信息管理平台 - 安全加固版本"""
 import os
+import sqlite3
 import hmac
 from datetime import timedelta
 
@@ -15,26 +16,19 @@ from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 app.config.update(
-    # 密钥管理：优先使用环境变量，否则自动生成随机密钥
     SECRET_KEY=os.environ.get(
         "SECRET_KEY",
         os.urandom(32).hex()
     ),
-    # Session 过期时间：30 分钟
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
-    # Session Cookie 安全选项
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    # 生产环境启用 Secure Cookie（需要 HTTPS）
     SESSION_COOKIE_SECURE=os.environ.get("HTTPS_ENABLED", "false").lower() == "true",
-    # 关闭 Debug 模式，由环境变量控制
     DEBUG=os.environ.get("FLASK_DEBUG", "false").lower() == "true",
 )
 
-# CSRF 保护（Flask-WTF）
 csrf = CSRFProtect(app)
 
-# 请求频率限制（Flask-Limiter）
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
@@ -42,8 +36,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-# ── 用户数据库 ──
-# 密码经过加盐哈希存储，不再使用明文
+# ── 用户数据库（内存字典，用于登录认证）──
 USERS = {
     "admin": {
         "username": "admin",
@@ -62,6 +55,29 @@ USERS = {
         "balance": 100
     }
 }
+
+
+# ── SQLite 数据库初始化 ──
+
+def init_db():
+    """初始化 SQLite 数据库，创建 users 表并插入默认用户"""
+    os.makedirs("data", exist_ok=True)
+    conn = sqlite3.connect("data/users.db")
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            email TEXT,
+            phone TEXT
+        )
+    """)
+    # 插入默认用户（使用 INSERT OR IGNORE 防止重复）
+    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('admin', 'admin123', 'admin@example.com', '13800138000')")
+    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('alice', 'alice2025', 'alice@example.com', '13900139001')")
+    conn.commit()
+    conn.close()
 
 
 def safe_user_info(user):
@@ -90,9 +106,7 @@ def login():
 
         user = USERS.get(username)
 
-        # 恒定时间密码比对（无论用户是否存在，都要做比对操作）
         if user is None:
-            # 使用 dummy 哈希防止时序攻击
             check_password_hash(
                 "scrypt:32768:8:1$dummy_salt$dummy_hash",
                 password
@@ -100,7 +114,6 @@ def login():
             return render_template("login.html", error="用户名或密码错误，请重试")
 
         if check_password_hash(user["password"], password):
-            # 设置 session
             session.permanent = True
             session["username"] = username
             session["role"] = user["role"]
@@ -110,6 +123,57 @@ def login():
     return render_template("login.html")
 
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username", "")
+        password = request.form.get("password", "")
+        email = request.form.get("email", "")
+        phone = request.form.get("phone", "")
+
+        # 使用参数化查询防止 SQL 注入
+        conn = sqlite3.connect("data/users.db")
+        c = conn.cursor()
+        sql = "INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)"
+        print(f"[SQL] 执行注册（参数化）: {sql}")
+        print(f"[SQL] 参数: username={username}, password={password}, email={email}, phone={phone}")
+        try:
+            c.execute(sql, (username, password, email, phone))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            conn.close()
+            return render_template("register.html", error="用户名已存在，请选择其他用户名")
+        conn.close()
+        return redirect(url_for("login", registered="success"))
+
+    return render_template("register.html")
+
+
+@app.route("/search")
+def search():
+    keyword = request.args.get("keyword", "")
+    results = []
+    if keyword:
+        # 使用参数化查询防止 SQL 注入
+        conn = sqlite3.connect("data/users.db")
+        c = conn.cursor()
+        sql = "SELECT id, username, email, phone FROM users WHERE username LIKE ? OR email LIKE ?"
+        like_pattern = f"%{keyword}%"
+        print(f"[SQL] 执行搜索（参数化）: {sql}")
+        print(f"[SQL] 参数: keyword={keyword}, like_pattern={like_pattern}")
+        c.execute(sql, (like_pattern, like_pattern))
+        rows = c.fetchall()
+        conn.close()
+        results = [{"id": r[0], "username": r[1], "email": r[2], "phone": r[3]} for r in rows]
+
+    username = session.get("username")
+    user_info = None
+    if username and username in USERS:
+        user_info = safe_user_info(USERS[username])
+
+    return render_template("index.html", user=user_info, search_results=results, keyword=keyword)
+
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -117,7 +181,7 @@ def logout():
 
 
 if __name__ == "__main__":
-    # 从环境变量读取主机和端口，有安全默认值
+    init_db()
     host = os.environ.get("FLASK_HOST", "127.0.0.1")
     port = int(os.environ.get("FLASK_PORT", "5000"))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
@@ -128,6 +192,7 @@ if __name__ == "__main__":
     print(f"  → 登录频率限制: 10 次/分钟/IP")
     print(f"  → CSRF 保护: 已启用")
     print(f"  → 密码存储: 加盐哈希 (scrypt)")
+    print(f"  → 数据库: data/users.db")
     print("=" * 50)
 
     app.run(debug=debug, host=host, port=port)

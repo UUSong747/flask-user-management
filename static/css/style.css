@@ -215,3 +215,51 @@ body {
     text-align: center;
     padding-top: 8px;
 }
+
+/* 搜索功能 */
+.search-form {
+    margin-bottom: 20px;
+}
+
+.search-group {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1;
+}
+
+.search-btn {
+    white-space: nowrap;
+    padding: 10px 20px;
+}
+
+.search-results {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.results-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.search-table {
+    margin-top: 8px;
+}
+
+.search-table th {
+    font-weight: 600;
+    padding: 10px 0;
+}
+
+.no-results {
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px 0;
+}

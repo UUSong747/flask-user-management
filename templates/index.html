@@ -33,6 +33,48 @@
             <a href="/logout" class="btn btn-logout">退出登录</a>
         </div>
     </div>
+
+    <!-- 搜索功能 -->
+    <div class="card">
+        <h2 class="card-title">用户搜索</h2>
+        <form method="GET" action="/search" class="search-form">
+            <div class="search-group">
+                <input type="text" id="keyword" name="keyword" class="form-input search-input" placeholder="输入用户名或邮箱关键词" value="{{ keyword or '' }}">
+                <button type="submit" class="btn btn-primary search-btn">搜索</button>
+            </div>
+        </form>
+
+        {% if keyword is defined and keyword %}
+            <div class="search-results">
+                <h3 class="results-title">搜索结果：关键词 "{{ keyword }}"</h3>
+                {% if search_results %}
+                <table class="info-table search-table">
+                    <thead>
+                        <tr>
+                            <th class="info-label">ID</th>
+                            <th class="info-label">用户名</th>
+                            <th class="info-label">邮箱</th>
+                            <th class="info-label">手机</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in search_results %}
+                        <tr>
+                            <td class="info-value">{{ r.id }}</td>
+                            <td class="info-value">{{ r.username }}</td>
+                            <td class="info-value">{{ r.email }}</td>
+                            <td class="info-value">{{ r.phone }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <p class="no-results">无搜索结果</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
 {% else %}
     <div class="card card-center">
         <h2 class="card-title">请先登录</h2>
