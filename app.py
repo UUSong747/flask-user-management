@@ -11,6 +11,7 @@ from flask import (
 )
 from flask_wtf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -38,6 +39,27 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
 )
+
+# ── 文件上传安全配置 ──
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+# 常见图片格式的魔数（文件头签名）
+IMAGE_SIGNATURES = {
+    b"\xff\xd8\xff": "jpg/jpeg",
+    b"\x89PNG\r\n\x1a\n": "png",
+    b"GIF87a": "gif",
+    b"GIF89a": "gif",
+    b"RIFF": "webp",
+}
+
+
+def check_image_signature(data):
+    """检查文件头魔数，确认是真实的图片文件"""
+    for sig, name in IMAGE_SIGNATURES.items():
+        if data[:len(sig)] == sig:
+            return True
+    return False
 
 # ── 用户数据库（内存字典，用于登录认证）──
 USERS = {
@@ -193,11 +215,33 @@ def upload():
             if f.filename == "":
                 error = "未选择文件"
             else:
-                upload_dir = os.path.join(app.root_path, "static", "uploads")
-                os.makedirs(upload_dir, exist_ok=True)
-                filepath = os.path.join(upload_dir, f.filename)
-                f.save(filepath)
-                uploaded_file = f.filename
+                # 1. 检查文件扩展名
+                original_name = f.filename
+                ext = original_name.rsplit(".", 1)[-1].lower() if "." in original_name else ""
+                if ext not in ALLOWED_EXTENSIONS:
+                    error = "仅允许上传图片文件（png、jpg、jpeg、gif、webp）"
+                else:
+                    # 2. 检查文件大小（先读前 32 字节判断魔数，再读全文件判断大小）
+                    head = f.read(32)
+                    f.seek(0, os.SEEK_END)
+                    file_size = f.tell()
+                    f.seek(0)
+
+                    if file_size > MAX_FILE_SIZE:
+                        error = f"文件过大，最大允许 {MAX_FILE_SIZE // 1024 // 1024}MB"
+                    elif not check_image_signature(head):
+                        error = "文件内容不是有效的图片格式"
+                    else:
+                        # 3. 安全的文件名：secure_filename 防路径穿越 + 时间戳防覆盖
+                        safe_name = secure_filename(original_name)
+                        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                        final_name = f"{timestamp}_{safe_name}"
+
+                        upload_dir = os.path.join(app.root_path, "static", "uploads")
+                        os.makedirs(upload_dir, exist_ok=True)
+                        filepath = os.path.join(upload_dir, final_name)
+                        f.save(filepath)
+                        uploaded_file = final_name
 
     return render_template("upload.html", uploaded_file=uploaded_file, error=error)
 
