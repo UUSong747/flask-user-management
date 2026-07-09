@@ -199,23 +199,7 @@ def upload():
                 f.save(filepath)
                 uploaded_file = f.filename
 
-    # 列出已上传的文件
-    upload_dir = os.path.join(app.root_path, "static", "uploads")
-    os.makedirs(upload_dir, exist_ok=True)
-    file_list = []
-    for fname in os.listdir(upload_dir):
-        fpath = os.path.join(upload_dir, fname)
-        if os.path.isfile(fpath):
-            size = os.path.getsize(fpath)
-            mtime = os.path.getmtime(fpath)
-            file_list.append({
-                "name": fname,
-                "size": size,
-                "mtime": datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
-            })
-    file_list.sort(key=lambda x: x["mtime"], reverse=True)
-
-    return render_template("upload.html", uploaded_file=uploaded_file, error=error, files=file_list)
+    return render_template("upload.html", uploaded_file=uploaded_file, error=error)
 
 
 @app.route("/files", methods=["GET", "POST"])
