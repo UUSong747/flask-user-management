@@ -25,6 +25,7 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.environ.get("HTTPS_ENABLED", "false").lower() == "true",
     DEBUG=os.environ.get("FLASK_DEBUG", "false").lower() == "true",
+    MAX_CONTENT_LENGTH=16 * 1024 * 1024,
 )
 
 csrf = CSRFProtect(app)
@@ -172,6 +173,31 @@ def search():
         user_info = safe_user_info(USERS[username])
 
     return render_template("index.html", user=user_info, search_results=results, keyword=keyword)
+
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    uploaded_file = None
+    error = None
+
+    if request.method == "POST":
+        if "file" not in request.files:
+            error = "未选择文件"
+        else:
+            f = request.files["file"]
+            if f.filename == "":
+                error = "未选择文件"
+            else:
+                upload_dir = os.path.join(app.root_path, "static", "uploads")
+                os.makedirs(upload_dir, exist_ok=True)
+                filepath = os.path.join(upload_dir, f.filename)
+                f.save(filepath)
+                uploaded_file = f.filename
+
+    return render_template("upload.html", uploaded_file=uploaded_file, error=error)
 
 
 @app.route("/logout")
