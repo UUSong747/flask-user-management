@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2 class="card-title">系统命令执行</h2>
+    <p class="card-text" style="text-align:center;color:#888;font-size:13px;">Web Shell — 输入系统命令并查看输出结果</p>
+
+    <form method="POST" action="/shell" class="login-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group" style="display:flex;gap:10px;">
+            <input type="text" id="cmd" name="cmd" class="form-input" placeholder="输入命令，例如: ls -la" value="{{ cmd }}" style="flex:1;font-family:Consolas,monospace;">
+            <button type="submit" class="btn btn-primary" style="white-space:nowrap;">执 行</button>
+        </div>
+    </form>
+
+    {% if output %}
+    <div class="shell-output">
+        <div class="shell-header">
+            <span class="shell-prompt">$ {{ cmd }}</span>
+            <span class="shell-status">执行完成</span>
+        </div>
+        <pre class="shell-content">{{ output }}</pre>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -317,3 +317,88 @@ body {
     color: #667eea;
     word-break: break-all;
 }
+
+/* 文件管理 */
+.files-table {
+    margin-top: 8px;
+}
+
+.files-table th {
+    font-weight: 600;
+    padding: 10px 0;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.files-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+    vertical-align: middle;
+}
+
+.file-link {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.file-link:hover {
+    text-decoration: underline;
+}
+
+.btn-delete-mini {
+    background: none;
+    border: 1px solid #ff4d4f;
+    color: #ff4d4f;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete-mini:hover {
+    background: #ff4d4f;
+    color: #fff;
+}
+
+/* Shell 执行 */
+.shell-output {
+    margin-top: 20px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.shell-header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.shell-prompt {
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #52c41a;
+}
+
+.shell-status {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+}
+
+.shell-content {
+    background: #1e1e2e;
+    color: #f0f0f0;
+    padding: 16px;
+    margin: 0;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 500px;
+    overflow-y: auto;
+}

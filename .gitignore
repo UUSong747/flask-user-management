@@ -35,3 +35,7 @@ instance/
 
 # Logs
 *.log
+
+# Uploads (track only .gitkeep)
+static/uploads/*
+!static/uploads/.gitkeep

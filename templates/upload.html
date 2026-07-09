@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card card-login">
-    <h2 class="card-title">上传头像</h2>
+<div class="card">
+    <h2 class="card-title">上传文件</h2>
 
     {% if error %}
         <div class="error-message">{{ error }}</div>
@@ -11,7 +11,7 @@
         <div class="upload-success">
             <p class="success-text">✅ 上传成功！</p>
             <div class="preview-wrapper">
-                <img src="/static/uploads/{{ uploaded_file }}" class="upload-preview" alt="头像预览">
+                <img src="/static/uploads/{{ uploaded_file }}" class="upload-preview" alt="预览" onerror="this.style.display='none'">
             </div>
             <p class="file-link-text">文件路径：</p>
             <div class="file-url-box">
@@ -26,10 +26,47 @@
     <form method="POST" action="/upload" enctype="multipart/form-data" class="login-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
-            <label for="file">选择图片文件</label>
+            <label for="file">选择文件</label>
             <input type="file" id="file" name="file" class="form-input file-input">
         </div>
         <button type="submit" class="btn btn-primary btn-full">上 传</button>
     </form>
 </div>
+
+{% if files %}
+<div class="card">
+    <h2 class="card-title">已上传文件</h2>
+    <table class="info-table files-table">
+        <thead>
+            <tr>
+                <th class="info-label" style="width:50%;">文件名</th>
+                <th class="info-label">大小</th>
+                <th class="info-label">上传时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in files %}
+            <tr>
+                <td class="info-value" style="font-family:Consolas,monospace;font-size:13px;">
+                    <a href="/static/uploads/{{ f.name }}" target="_blank" class="file-link">{{ f.name }}</a>
+                </td>
+                <td class="info-value">
+                    {% if f.size < 1024 %}
+                        {{ f.size }} B
+                    {% elif f.size < 1024*1024 %}
+                        {{ (f.size / 1024)|round(1) }} KB
+                    {% else %}
+                        {{ (f.size / 1024 / 1024)|round(1) }} MB
+                    {% endif %}
+                </td>
+                <td class="info-value" style="font-size:13px;color:#888;">{{ f.mtime }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="action-row" style="margin-top:12px;">
+        <a href="/files" class="btn btn-primary">管理所有文件</a>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
