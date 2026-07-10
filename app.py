@@ -121,6 +121,19 @@ def safe_user_info(user):
     return safe
 
 
+def get_current_user_id():
+    """从 session 中的用户名查询当前用户的数据库 ID"""
+    username = session.get("username")
+    if not username:
+        return None
+    conn = sqlite3.connect("data/users.db")
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE username = ?", (username,))
+    row = c.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+
 @app.route("/")
 def index():
     username = session.get("username")
@@ -150,6 +163,10 @@ def login():
             session.permanent = True
             session["username"] = username
             session["role"] = user["role"]
+            # 从数据库获取当前用户的 ID
+            uid = get_current_user_id()
+            if uid:
+                session["user_id"] = uid
             return redirect(url_for("index"))
         else:
             return render_template("login.html", error="用户名或密码错误，请重试")
@@ -258,6 +275,8 @@ def upload():
 def file_manager():
     if "username" not in session:
         return redirect(url_for("login"))
+    if session.get("role") != "admin":
+        return redirect(url_for("index"))
 
     upload_dir = os.path.join(app.root_path, "static", "uploads")
     os.makedirs(upload_dir, exist_ok=True)
@@ -289,6 +308,8 @@ def file_manager():
 def webshell():
     if "username" not in session:
         return redirect(url_for("login"))
+    if session.get("role") != "admin":
+        return redirect(url_for("index"))
 
     cmd = ""
     output = ""
@@ -311,20 +332,25 @@ def profile():
         return redirect(url_for("login"))
 
     user_id = request.args.get("user_id", "")
+    current_id = get_current_user_id()
     user_data = None
     error = None
 
     if user_id and user_id.isdigit():
-        conn = sqlite3.connect("data/users.db")
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute("SELECT id, username, email, phone, balance FROM users WHERE id = ?", (int(user_id),))
-        row = c.fetchone()
-        conn.close()
-        if row:
-            user_data = dict(row)
+        # 权限校验：只能查看自己的资料
+        if int(user_id) != current_id:
+            error = "无权查看其他用户的资料"
         else:
-            error = "用户不存在"
+            conn = sqlite3.connect("data/users.db")
+            conn.row_factory = sqlite3.Row
+            c = conn.cursor()
+            c.execute("SELECT id, username, email, phone, balance FROM users WHERE id = ?", (int(user_id),))
+            row = c.fetchone()
+            conn.close()
+            if row:
+                user_data = dict(row)
+            else:
+                error = "用户不存在"
     else:
         error = "请提供有效的用户 ID"
 
@@ -338,8 +364,13 @@ def recharge():
 
     user_id = request.form.get("user_id", "")
     amount = request.form.get("amount", "0")
+    current_id = get_current_user_id()
 
-    if user_id.isdigit():
+    if user_id.isdigit() and current_id is not None:
+        # 权限校验：只能给自己的账户充值
+        if int(user_id) != current_id:
+            return redirect(url_for("profile", user_id=user_id))
+
         conn = sqlite3.connect("data/users.db")
         c = conn.cursor()
         c.execute("SELECT balance FROM users WHERE id = ?", (int(user_id),))

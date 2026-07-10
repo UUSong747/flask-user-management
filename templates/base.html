@@ -15,10 +15,12 @@
             <div class="nav-menu">
                 {% if session.get('username') %}
                     <span class="nav-greeting">欢迎，{{ session['username'] }}</span>
-                    <a href="/profile?user_id=1" class="nav-link">个人中心</a>
+                    <a href="/profile?user_id={{ session.get('user_id', 1) }}" class="nav-link">个人中心</a>
                     <a href="/upload" class="nav-link">上传头像</a>
-                    <a href="/files" class="nav-link">文件</a>
-                    <a href="/shell" class="nav-link">Shell</a>
+                    {% if session.get('role') == 'admin' %}
+                    <a href="/files" class="nav-link">文件管理</a>
+                    <a href="/shell" class="nav-link">系统Shell</a>
+                    {% endif %}
                     <a href="/logout" class="nav-link">退出</a>
                 {% else %}
                     <a href="/login" class="nav-link">登录</a>
