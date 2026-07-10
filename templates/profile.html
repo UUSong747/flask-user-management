@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2 class="card-title">个人中心</h2>
+
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    {% if user %}
+        <div class="user-info">
+            <table class="info-table">
+                <tr>
+                    <td class="info-label">ID</td>
+                    <td class="info-value">{{ user.id }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">用户名</td>
+                    <td class="info-value">{{ user.username }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">邮箱</td>
+                    <td class="info-value">{{ user.email }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">手机</td>
+                    <td class="info-value">{{ user.phone }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">余额</td>
+                    <td class="info-value" style="color:#f5222d;font-weight:600;font-size:18px;">¥{{ user.balance }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+            <h2 class="card-title">充值</h2>
+            <form method="POST" action="/recharge" class="login-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="user_id" value="{{ user.id }}">
+                <div class="form-group">
+                    <label for="amount">金额</label>
+                    <input type="number" id="amount" name="amount" class="form-input" placeholder="输入充值金额（可正可负）" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">充 值</button>
+            </form>
+        </div>
+
+        <div class="action-row" style="margin-top:16px;">
+            <a href="/" class="btn btn-primary" style="background:#888;">返回首页</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

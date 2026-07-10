@@ -95,12 +95,20 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             email TEXT,
-            phone TEXT
+            phone TEXT,
+            balance INTEGER DEFAULT 0
         )
     """)
+    # 兼容旧表：如果 balance 列不存在则添加
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN balance INTEGER DEFAULT 0")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass  # 列已存在，忽略
+
     # 插入默认用户（使用 INSERT OR IGNORE 防止重复）
-    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('admin', 'admin123', 'admin@example.com', '13800138000')")
-    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('alice', 'alice2025', 'alice@example.com', '13900139001')")
+    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone, balance) VALUES ('admin', 'admin123', 'admin@example.com', '13800138000', 99999)")
+    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone, balance) VALUES ('alice', 'alice2025', 'alice@example.com', '13900139001', 100)")
     conn.commit()
     conn.close()
 
@@ -295,6 +303,54 @@ def webshell():
                 output = f"执行错误: {e}"
 
     return render_template("shell.html", cmd=cmd, output=output)
+
+
+@app.route("/profile")
+def profile():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    user_id = request.args.get("user_id", "")
+    user_data = None
+    error = None
+
+    if user_id and user_id.isdigit():
+        conn = sqlite3.connect("data/users.db")
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("SELECT id, username, email, phone, balance FROM users WHERE id = ?", (int(user_id),))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            user_data = dict(row)
+        else:
+            error = "用户不存在"
+    else:
+        error = "请提供有效的用户 ID"
+
+    return render_template("profile.html", user=user_data, error=error)
+
+
+@app.route("/recharge", methods=["POST"])
+def recharge():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    user_id = request.form.get("user_id", "")
+    amount = request.form.get("amount", "0")
+
+    if user_id.isdigit():
+        conn = sqlite3.connect("data/users.db")
+        c = conn.cursor()
+        c.execute("SELECT balance FROM users WHERE id = ?", (int(user_id),))
+        row = c.fetchone()
+        if row:
+            new_balance = row[0] + int(amount)
+            c.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, int(user_id)))
+            conn.commit()
+        conn.close()
+
+    return redirect(url_for("profile", user_id=user_id))
 
 
 @app.route("/logout")
