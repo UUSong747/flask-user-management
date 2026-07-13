@@ -15,6 +15,7 @@
             <div class="nav-menu">
                 {% if session.get('username') %}
                     <span class="nav-greeting">欢迎，{{ session['username'] }}</span>
+                    <a href="/page?name=help" class="nav-link">帮助中心</a>
                     <a href="/profile?user_id={{ session.get('user_id', 1) }}" class="nav-link">个人中心</a>
                     <a href="/upload" class="nav-link">上传头像</a>
                     {% if session.get('role') == 'admin' %}

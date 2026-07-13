@@ -360,6 +360,29 @@ body {
     color: #fff;
 }
 
+/* 动态页面内容 */
+.page-content-card {
+    max-width: 800px;
+}
+
+.page-body {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #333;
+}
+
+.page-body h1 { font-size: 22px; margin-bottom: 16px; }
+.page-body h2 { font-size: 17px; margin: 20px 0 10px; }
+.page-body p { margin-bottom: 10px; }
+.page-body hr { border: none; border-top: 1px solid #eee; margin: 24px 0; }
+.page-body code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: #e83e8c;
+}
+
 /* Shell 执行 */
 .shell-output {
     margin-top: 20px;

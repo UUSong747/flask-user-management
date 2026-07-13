@@ -384,6 +384,35 @@ def recharge():
     return redirect(url_for("profile", user_id=user_id))
 
 
+@app.route("/page")
+def dynamic_page():
+    name = request.args.get("name", "")
+    page_content = None
+    error = None
+
+    if name:
+        # 直接拼接用户输入的 name 到路径中（存在路径穿越漏洞）
+        page_path = os.path.join("pages", name)
+        if os.path.isfile(page_path):
+            with open(page_path, "r", encoding="utf-8") as f:
+                page_content = f.read()
+        else:
+            # 尝试加上 .html 后缀
+            page_path_html = os.path.join("pages", name + ".html")
+            if os.path.isfile(page_path_html):
+                with open(page_path_html, "r", encoding="utf-8") as f:
+                    page_content = f.read()
+            else:
+                error = "页面不存在"
+
+    username = session.get("username")
+    user_info = None
+    if username and username in USERS:
+        user_info = safe_user_info(USERS[username])
+
+    return render_template("index.html", user=user_info, page_content=page_content, page_error=error)
+
+
 @app.route("/logout")
 def logout():
     session.clear()
