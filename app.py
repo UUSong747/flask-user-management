@@ -391,16 +391,17 @@ def dynamic_page():
     error = None
 
     if name:
-        # 直接拼接用户输入的 name 到路径中（存在路径穿越漏洞）
-        page_path = os.path.join("pages", name)
-        if os.path.isfile(page_path):
-            with open(page_path, "r", encoding="utf-8") as f:
-                page_content = f.read()
+        # 移除路径穿越尝试（过滤 ../）
+        safe_name = name.replace("..", "").replace("/", "").replace("\\", "")
+        if not safe_name:
+            error = "非法的页面名称"
         else:
-            # 尝试加上 .html 后缀
-            page_path_html = os.path.join("pages", name + ".html")
-            if os.path.isfile(page_path_html):
-                with open(page_path_html, "r", encoding="utf-8") as f:
+            # 检查 pages/ 下的文件
+            if not safe_name.endswith(".html"):
+                safe_name = safe_name + ".html"
+            page_path = os.path.join(app.root_path, "pages", safe_name)
+            if os.path.isfile(page_path):
+                with open(page_path, "r", encoding="utf-8") as f:
                     page_content = f.read()
             else:
                 error = "页面不存在"
