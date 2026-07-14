@@ -415,7 +415,6 @@ def dynamic_page():
 
 
 @app.route("/change-password", methods=["POST"])
-@csrf.exempt
 def change_password():
     if "username" not in session:
         return redirect(url_for("login"))
