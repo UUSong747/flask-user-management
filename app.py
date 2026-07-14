@@ -414,6 +414,37 @@ def dynamic_page():
     return render_template("index.html", user=user_info, page_content=page_content, page_error=error)
 
 
+@app.route("/change-password", methods=["POST"])
+@csrf.exempt
+def change_password():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    username = request.form.get("username", "")
+    new_password = request.form.get("new_password", "")
+
+    # 更新 SQLite 数据库中的密码
+    conn = sqlite3.connect("data/users.db")
+    c = conn.cursor()
+    c.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username))
+    conn.commit()
+    conn.close()
+
+    # 同步更新内存字典中的密码（如果有哈希存储）
+    if username in USERS:
+        USERS[username]["password"] = generate_password_hash(new_password)
+
+    # 查找用户 ID 并跳转
+    conn = sqlite3.connect("data/users.db")
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE username = ?", (username,))
+    row = c.fetchone()
+    conn.close()
+    uid = row[0] if row else 1
+
+    return redirect(url_for("profile", user_id=uid))
+
+
 @app.route("/logout")
 def logout():
     session.clear()
