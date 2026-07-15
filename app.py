@@ -6,6 +6,8 @@ import datetime
 import subprocess
 import urllib.request
 import urllib.error
+import urllib.parse
+import socket
 from datetime import timedelta
 
 from flask import (
@@ -458,15 +460,44 @@ def fetch_url():
 
     if target_url:
         try:
-            resp = urllib.request.urlopen(target_url, timeout=10)
-            result_status = getattr(resp, "status", 200)
-            result_reason = getattr(resp, "reason", "OK")
-            result_status = f"{result_status} {result_reason}"
-            raw = resp.read(5000)
-            try:
-                result_content = raw.decode("utf-8")
-            except UnicodeDecodeError:
-                result_content = raw.decode("utf-8", errors="replace")
+            # SSRF 防护：只允许 http/https 协议
+            parsed = urllib.parse.urlparse(target_url)
+            if parsed.scheme not in ("http", "https"):
+                error = "仅支持 http:// 和 https:// 协议"
+            else:
+                # 解析域名获取 IP，检查是否为内网地址
+                hostname = parsed.hostname
+                if hostname:
+                    try:
+                        ip = socket.gethostbyname(hostname)
+                    except Exception:
+                        ip = hostname
+                    # 检查是否为私有/内网 IP
+                    parts = ip.split(".")
+                    if len(parts) == 4:
+                        if parts[0] == "127":
+                            error = f"不允许访问内网地址: {ip}"
+                        elif parts[0] == "10":
+                            error = f"不允许访问内网地址: {ip}"
+                        elif parts[0] == "169" and parts[1] == "254":
+                            error = f"不允许访问内网地址: {ip}"
+                        elif parts[0] == "192" and parts[1] == "168":
+                            error = f"不允许访问内网地址: {ip}"
+                        elif parts[0] == "172" and 16 <= int(parts[1]) <= 31:
+                            error = f"不允许访问内网地址: {ip}"
+                    elif hostname.lower() in ("localhost", "localhost.localdomain"):
+                        error = "不允许访问本地服务"
+
+                if not error:
+                    resp = urllib.request.urlopen(target_url, timeout=10)
+                    result_status = getattr(resp, "status", 200)
+                    result_reason = getattr(resp, "reason", "OK")
+                    result_status = f"{result_status} {result_reason}"
+                    raw = resp.read(5000)
+                    try:
+                        result_content = raw.decode("utf-8")
+                    except UnicodeDecodeError:
+                        result_content = raw.decode("utf-8", errors="replace")
         except urllib.error.HTTPError as e:
             result_status = f"{e.code} {e.reason}"
             result_content = str(e.read(500))
