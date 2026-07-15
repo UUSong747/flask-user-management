@@ -425,3 +425,47 @@ body {
     max-height: 500px;
     overflow-y: auto;
 }
+
+/* URL 抓取 */
+.fetch-result {
+    margin-top: 16px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fetch-header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 10px 16px;
+}
+
+.fetch-status {
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #52c41a;
+}
+
+.fetch-url-display {
+    background: #f5f5f5;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: #888;
+    border-bottom: 1px solid #e8e8e8;
+    word-break: break-all;
+}
+
+.fetch-content {
+    background: #1e1e2e;
+    color: #f0f0f0;
+    padding: 16px;
+    margin: 0;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+}

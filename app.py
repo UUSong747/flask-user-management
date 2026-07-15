@@ -4,6 +4,8 @@ import sqlite3
 import hmac
 import datetime
 import subprocess
+import urllib.request
+import urllib.error
 from datetime import timedelta
 
 from flask import (
@@ -442,6 +444,43 @@ def change_password():
     uid = row[0] if row else 1
 
     return redirect(url_for("profile", user_id=uid))
+
+
+@app.route("/fetch-url", methods=["POST"])
+def fetch_url():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    target_url = request.form.get("url", "")
+    result_status = ""
+    result_content = ""
+    error = None
+
+    if target_url:
+        try:
+            resp = urllib.request.urlopen(target_url, timeout=10)
+            result_status = getattr(resp, "status", 200)
+            result_reason = getattr(resp, "reason", "OK")
+            result_status = f"{result_status} {result_reason}"
+            raw = resp.read(5000)
+            try:
+                result_content = raw.decode("utf-8")
+            except UnicodeDecodeError:
+                result_content = raw.decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as e:
+            result_status = f"{e.code} {e.reason}"
+            result_content = str(e.read(500))
+        except Exception as e:
+            error = f"请求失败: {type(e).__name__}: {e}"
+
+    username = session.get("username")
+    user_info = None
+    if username and username in USERS:
+        user_info = safe_user_info(USERS[username])
+
+    return render_template("index.html", user=user_info,
+                           fetch_url=target_url, fetch_status=result_status,
+                           fetch_content=result_content, fetch_error=error)
 
 
 @app.route("/logout")
