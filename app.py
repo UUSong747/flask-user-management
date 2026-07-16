@@ -8,6 +8,7 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import socket
+import shlex
 from datetime import timedelta
 
 from flask import (
@@ -524,7 +525,9 @@ def ping():
     if request.method == "POST":
         ip = request.form.get("ip", "")
         if ip:
-            command = f"ping -c 3 {ip}"
+            # 过滤特殊字符，防止命令注入
+            safe_ip = shlex.quote(ip)
+            command = f"ping -c 3 {safe_ip}"
             try:
                 result = subprocess.check_output(command, shell=True, timeout=30, stderr=subprocess.STDOUT)
                 result = result.decode("utf-8", errors="replace")
