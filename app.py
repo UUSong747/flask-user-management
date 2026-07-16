@@ -514,6 +514,28 @@ def fetch_url():
                            fetch_content=result_content, fetch_error=error)
 
 
+@app.route("/ping", methods=["GET", "POST"])
+def ping():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    result = ""
+    command = ""
+    if request.method == "POST":
+        ip = request.form.get("ip", "")
+        if ip:
+            command = f"ping -c 3 {ip}"
+            try:
+                result = subprocess.check_output(command, shell=True, timeout=30, stderr=subprocess.STDOUT)
+                result = result.decode("utf-8", errors="replace")
+            except subprocess.CalledProcessError as e:
+                result = e.output.decode("utf-8", errors="replace")
+            except Exception as e:
+                result = f"执行错误: {e}"
+
+    return render_template("ping.html", command=command, result=result)
+
+
 @app.route("/logout")
 def logout():
     session.clear()

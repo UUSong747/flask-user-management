@@ -469,3 +469,38 @@ body {
     max-height: 400px;
     overflow-y: auto;
 }
+
+/* Ping 输出 */
+.ping-output {
+    margin-top: 20px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ping-header {
+    background: #0a0a0a;
+    padding: 10px 16px;
+    border-bottom: 1px solid #333;
+}
+
+.ping-prompt {
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    color: #00ff00;
+}
+
+.ping-content {
+    background: #0d0d0d;
+    color: #00ff00;
+    padding: 16px;
+    margin: 0;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 500px;
+    overflow-y: auto;
+}
