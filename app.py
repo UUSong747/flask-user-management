@@ -11,6 +11,7 @@ import socket
 import shlex
 import re
 import json
+import xml.etree.ElementTree as ET
 from datetime import timedelta
 
 from flask import (
@@ -553,36 +554,23 @@ def xml_import():
         xml_data = request.form.get("xml_data", "")
         if xml_data.strip():
             try:
-                # 手动处理 XXE：提取 <!ENTITY 定义中的 SYSTEM 文件路径
-                entity_pattern = re.compile(r'<!ENTITY\s+\w+\s+SYSTEM\s+"([^"]+)"')
-                matches = entity_pattern.findall(xml_data)
-
-                file_contents = {}
-                for filepath in matches:
-                    try:
-                        with open(filepath, "r", encoding="utf-8") as f:
-                            file_contents[filepath] = f.read()
-                    except Exception:
-                        file_contents[filepath] = f"[无法读取: {filepath}]"
-
-                # 替换实体引用 &xxe; 为文件内容
-                for filepath, content in file_contents.items():
-                    entity_name_match = re.search(r'<!ENTITY\s+(\w+)\s+SYSTEM\s+"' + re.escape(filepath) + r'"', xml_data)
-                    if entity_name_match:
-                        entity_name = entity_name_match.group(1)
-                        xml_data = xml_data.replace(f"&{entity_name};", content)
-
-                # 提取 user 数据
+                # 使用标准 XML 解析器（默认不解析外部实体，安全防 XXE）
+                root = ET.fromstring(xml_data)
                 users = []
-                user_pattern = re.compile(r'<user>\s*<name>(.*?)</name>\s*<email>(.*?)</email>\s*</user>', re.DOTALL)
-                for match in user_pattern.finditer(xml_data):
-                    users.append({"name": match.group(1).strip(), "email": match.group(2).strip()})
+                for user_elem in root.findall("user"):
+                    name_elem = user_elem.find("name")
+                    email_elem = user_elem.find("email")
+                    name = name_elem.text.strip() if name_elem is not None and name_elem.text else ""
+                    email = email_elem.text.strip() if email_elem is not None and email_elem.text else ""
+                    users.append({"name": name, "email": email})
 
                 if users:
                     result_json = json.dumps({"users": users, "total": len(users)}, ensure_ascii=False, indent=2)
                 else:
                     result_json = json.dumps({"error": "未找到 user 数据"}, ensure_ascii=False, indent=2)
 
+            except ET.ParseError as e:
+                error = f"XML 解析失败: {e}"
             except Exception as e:
                 error = f"解析失败: {type(e).__name__}: {e}"
 
