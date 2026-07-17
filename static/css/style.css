@@ -504,3 +504,41 @@ body {
     max-height: 500px;
     overflow-y: auto;
 }
+
+/* XML 导入 */
+.xml-textarea {
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 200px;
+}
+
+.xml-result {
+    margin-top: 20px;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.xml-result-header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 10px 16px;
+    font-size: 13px;
+}
+
+.xml-result-content {
+    background: #f8f9fa;
+    color: #333;
+    padding: 16px;
+    margin: 0;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+}
